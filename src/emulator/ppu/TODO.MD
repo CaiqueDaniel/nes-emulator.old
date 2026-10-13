@@ -1,0 +1,7 @@
+- [x] $2000: configurar NMI
+- [x] $2000: ativar NMI on v-blank
+- [x] $2000: copiar double write PPU_SCROLL para V
+- [] $2000: handle bit 2 PPU_CTRL to handle address ctrl on register V
+- [x] $2002: limpar registro na leitura
+- [x] $2006: setar endereço em V on double write
+- [x] $2007: escrever em vram bytes escritos nesse endereçc

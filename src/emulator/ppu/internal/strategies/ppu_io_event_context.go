@@ -43,6 +43,9 @@ func (p *PPUIOEventContext) getStrategyForWriteSignal(address uint16, state *dom
 
 	case domain.PPU_DATA:
 		return NewUpdateVRAMDataIOEventStrategy(p.bus)
+
+	case domain.PPU_SCROLL:
+		return NewCopyScrollToVRegister(p.bus)
 	}
 
 	return nil

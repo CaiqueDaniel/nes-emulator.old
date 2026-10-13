@@ -131,3 +131,22 @@ func TestPPUIOEventContext_HandleEvent_Read_UnhandledAddress(t *testing.T) {
 		t.Errorf("expected W to remain set")
 	}
 }
+
+func TestPPUIOEventContext_HandleEvent_Write_ScrollToVRegister(t *testing.T) {
+	bus := fixtures.NewMockBus()
+	sut := strategies.NewPPUIOEventContext(bus)
+	state := domain.NewPPU()
+	state.ToggleW()
+
+	event := &application.IOEvent{
+		Address: domain.PPU_SCROLL, // Not handled by read strategy
+		IsWrite: true,
+	}
+
+	// Should not panic, and state should remain unchanged
+	sut.HandleEvent(event, state)
+
+	if state.IsWSet() {
+		t.Errorf("expected W to remain set")
+	}
+}
