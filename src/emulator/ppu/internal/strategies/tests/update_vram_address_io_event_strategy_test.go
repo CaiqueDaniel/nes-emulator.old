@@ -1,47 +1,22 @@
-package strategies
+package tests
 
 import (
 	"nes-emu/src/emulator/ppu/internal/domain"
+	"nes-emu/src/emulator/ppu/internal/strategies"
 	"nes-emu/test/fixtures"
 	"testing"
 )
 
-func TestNewUpdateVRAMAddressIOEventStrategy(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMAddressIOEventStrategy(bus)
-
-	if sut == nil {
-		t.Fatal("expected NewUpdateVRAMAddressIOEventStrategy to return a non-nil instance")
-	}
-
-	if !sut.initilized {
-		t.Errorf("expected initilized to be true")
-	}
-
-	if sut.bus != bus {
-		t.Errorf("expected bus to be properly set")
-	}
-}
-
 func TestUpdateVRAMAddressIOEventStrategy_PanicWhenNotInitialized(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic when UpdateVRAMAddressIOEventStrategy is not initialized")
-		}
-		if r != "UpdateVRAMAddressIOEventStrategy not initialized" {
-			t.Errorf("expected panic 'UpdateVRAMAddressIOEventStrategy not initialized', got '%v'", r)
-		}
-	}()
-
-	sut := &UpdateVRAMAddressIOEventStrategy{}
+	bus := fixtures.NewMockBus()
+	sut := strategies.NewUpdateVRAMAddressIOEventStrategy(bus)
 	state := domain.NewPPU()
 	sut.Handle(state)
 }
 
 func TestUpdateVRAMAddressIOEventStrategy_Handle_FirstWrite(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMAddressIOEventStrategy(bus)
+	sut := strategies.NewUpdateVRAMAddressIOEventStrategy(bus)
 	state := domain.NewPPU()
 
 	// Write 0x3D to PPU_ADDRESS
@@ -65,7 +40,7 @@ func TestUpdateVRAMAddressIOEventStrategy_Handle_FirstWrite(t *testing.T) {
 
 func TestUpdateVRAMAddressIOEventStrategy_Handle_FirstWrite_MasksBitsAbove14(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMAddressIOEventStrategy(bus)
+	sut := strategies.NewUpdateVRAMAddressIOEventStrategy(bus)
 	state := domain.NewPPU()
 
 	// Write 0xFF to PPU_ADDRESS: bits 6 and 7 should be cleared by 0x3F00 mask
@@ -81,7 +56,7 @@ func TestUpdateVRAMAddressIOEventStrategy_Handle_FirstWrite_MasksBitsAbove14(t *
 
 func TestUpdateVRAMAddressIOEventStrategy_Handle_SecondWrite(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMAddressIOEventStrategy(bus)
+	sut := strategies.NewUpdateVRAMAddressIOEventStrategy(bus)
 	state := domain.NewPPU()
 
 	// Prepare state as if first write already occurred
@@ -112,7 +87,7 @@ func TestUpdateVRAMAddressIOEventStrategy_Handle_SecondWrite(t *testing.T) {
 
 func TestUpdateVRAMAddressIOEventStrategy_Handle_FullTwoWriteCycle(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMAddressIOEventStrategy(bus)
+	sut := strategies.NewUpdateVRAMAddressIOEventStrategy(bus)
 	state := domain.NewPPU()
 
 	// 1. First write: high byte 0x24

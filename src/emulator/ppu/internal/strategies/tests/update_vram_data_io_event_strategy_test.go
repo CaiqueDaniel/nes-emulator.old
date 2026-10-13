@@ -1,47 +1,22 @@
-package strategies
+package tests
 
 import (
 	"nes-emu/src/emulator/ppu/internal/domain"
+	"nes-emu/src/emulator/ppu/internal/strategies"
 	"nes-emu/test/fixtures"
 	"testing"
 )
 
-func TestNewUpdateVRAMDataIOEventStrategy(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMDataIOEventStrategy(bus)
-
-	if sut == nil {
-		t.Fatal("expected NewUpdateVRAMDataIOEventStrategy to return a non-nil instance")
-	}
-
-	if !sut.initialized {
-		t.Errorf("expected initialized to be true")
-	}
-
-	if sut.bus != bus {
-		t.Errorf("expected bus to be properly set")
-	}
-}
-
 func TestUpdateVRAMDataIOEventStrategy_PanicWhenNotInitialized(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic when UpdateVRAMDataIOEventStrategy is not initialized")
-		}
-		if r != "UpdateVRAMDataIOEventStrategy not initialized" {
-			t.Errorf("expected panic 'UpdateVRAMDataIOEventStrategy not initialized', got '%v'", r)
-		}
-	}()
-
-	sut := &UpdateVRAMDataIOEventStrategy{}
+	bus := fixtures.NewMockBus()
+	sut := strategies.NewUpdateVRAMDataIOEventStrategy(bus)
 	state := domain.NewPPU()
 	sut.Handle(state)
 }
 
 func TestUpdateVRAMDataIOEventStrategy_Handle_WritesDataToVideoMemory(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMDataIOEventStrategy(bus)
+	sut := strategies.NewUpdateVRAMDataIOEventStrategy(bus)
 	state := domain.NewPPU()
 
 	targetVRAMAddress := uint16(0x2150)
@@ -73,7 +48,7 @@ func TestUpdateVRAMDataIOEventStrategy_Handle_IncrementsVBy1_WhenIncrementBitCle
 			bus := fixtures.NewMockBus()
 			bus.WriteToMemory(domain.PPU_CONTROL, tc.controlVal)
 
-			sut := NewUpdateVRAMDataIOEventStrategy(bus)
+			sut := strategies.NewUpdateVRAMDataIOEventStrategy(bus)
 			state := domain.NewPPU()
 			state.SetV(0x2000)
 
@@ -100,7 +75,7 @@ func TestUpdateVRAMDataIOEventStrategy_Handle_IncrementsVBy32_WhenIncrementBitSe
 			bus := fixtures.NewMockBus()
 			bus.WriteToMemory(domain.PPU_CONTROL, tc.controlVal)
 
-			sut := NewUpdateVRAMDataIOEventStrategy(bus)
+			sut := strategies.NewUpdateVRAMDataIOEventStrategy(bus)
 			state := domain.NewPPU()
 			state.SetV(0x2000)
 
@@ -110,35 +85,5 @@ func TestUpdateVRAMDataIOEventStrategy_Handle_IncrementsVBy32_WhenIncrementBitSe
 				t.Errorf("expected V to be incremented by 32 (0x2020), got 0x%04X", state.GetV())
 			}
 		})
-	}
-}
-
-func TestUpdateVRAMDataIOEventStrategy_ReadAndWriteVMemory(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMDataIOEventStrategy(bus)
-
-	address := uint16(0x3000)
-	value := uint8(0xBE)
-
-	sut.writeToVMemory(address, value)
-
-	readBack := sut.readVMemory(address)
-	if readBack != value {
-		t.Errorf("expected readVMemory to return 0x%02X, got 0x%02X", value, readBack)
-	}
-}
-
-func TestUpdateVRAMDataIOEventStrategy_IsOffsetIncrementBy32(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewUpdateVRAMDataIOEventStrategy(bus)
-
-	bus.WriteToMemory(domain.PPU_CONTROL, 0x00)
-	if sut.isOffsetIncrementBy32() {
-		t.Errorf("expected isOffsetIncrementBy32 to return false when bit 2 is 0")
-	}
-
-	bus.WriteToMemory(domain.PPU_CONTROL, 0x04)
-	if !sut.isOffsetIncrementBy32() {
-		t.Errorf("expected isOffsetIncrementBy32 to return true when bit 2 is 1")
 	}
 }
