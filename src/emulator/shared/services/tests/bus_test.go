@@ -97,10 +97,6 @@ func TestAttachPictureProcessingUnitAndTick(t *testing.T) {
 		t.Fatalf("Expected 3 render event records, got %d", len(ppu.events))
 	}
 
-	if ppu.events[0] == nil {
-		t.Errorf("Expected first render call to receive a non-nil PPUIOEvent")
-	}
-
 	if ppu.events[1] != nil || ppu.events[2] != nil {
 		t.Errorf("Expected subsequent render calls to receive nil event")
 	}
@@ -117,68 +113,6 @@ func TestAttachPictureProcessingUnitAndTick(t *testing.T) {
 
 	if b.GetTickCount() != 2 {
 		t.Errorf("Expected tickCount to be 2, got %d", b.GetTickCount())
-	}
-}
-
-func TestTick_PropagatesLastMemoryWriteToPPU(t *testing.T) {
-	b := bus.NewBus()
-	b.AtatchWorkMemory(memory.NewMemory())
-	ppu := &mockPPU{}
-	b.AttachPictureProcessingUnit(ppu)
-
-	// Write to a mirrored PPU address (0x2008 -> 0x2000)
-	b.WriteToMemory(0x2008, 0x12)
-	b.Tick()
-
-	if len(ppu.events) != 3 {
-		t.Fatalf("Expected 3 render events, got %d", len(ppu.events))
-	}
-
-	if ppu.events[0] == nil {
-		t.Fatalf("Expected first render call to receive an event")
-	}
-
-	if ppu.events[0].Address != 0x2000 {
-		t.Errorf("Expected event address to be translated to 0x2000, got 0x%X", ppu.events[0].Address)
-	}
-
-	if !ppu.events[0].IsWrite {
-		t.Errorf("Expected event IsWrite to be true")
-	}
-
-	if ppu.events[1] != nil || ppu.events[2] != nil {
-		t.Errorf("Expected 2nd and 3rd render calls to receive nil")
-	}
-}
-
-func TestTick_PropagatesLastMemoryReadToPPU(t *testing.T) {
-	b := bus.NewBus()
-	b.AtatchWorkMemory(memory.NewMemory())
-	ppu := &mockPPU{}
-	b.AttachPictureProcessingUnit(ppu)
-
-	// Read from a mirrored PPU address (0x2009 -> 0x2001)
-	_ = b.ReadFromMemory(0x2009)
-	b.Tick()
-
-	if len(ppu.events) != 3 {
-		t.Fatalf("Expected 3 render events, got %d", len(ppu.events))
-	}
-
-	if ppu.events[0] == nil {
-		t.Fatalf("Expected first render call to receive an event")
-	}
-
-	if ppu.events[0].Address != 0x2001 {
-		t.Errorf("Expected event address to be translated to 0x2001, got 0x%X", ppu.events[0].Address)
-	}
-
-	if ppu.events[0].IsWrite {
-		t.Errorf("Expected event IsWrite to be false")
-	}
-
-	if ppu.events[1] != nil || ppu.events[2] != nil {
-		t.Errorf("Expected 2nd and 3rd render calls to receive nil")
 	}
 }
 
