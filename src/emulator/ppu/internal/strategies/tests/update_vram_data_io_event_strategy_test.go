@@ -20,7 +20,8 @@ func TestUpdateVRAMDataIOEventStrategy_Handle_WritesDataToVideoMemory(t *testing
 	state := domain.NewPPU()
 
 	targetVRAMAddress := uint16(0x2150)
-	state.SetV(targetVRAMAddress)
+	state.AppendOnV(0x21)
+	state.AppendOnV(0x50)
 
 	// Set data value in PPU_DATA register (0x2007)
 	expectedValue := uint8(0x7F)
@@ -50,7 +51,8 @@ func TestUpdateVRAMDataIOEventStrategy_Handle_IncrementsVBy1_WhenIncrementBitCle
 
 			sut := strategies.NewUpdateVRAMDataIOEventStrategy(bus)
 			state := domain.NewPPU()
-			state.SetV(0x2000)
+			state.AppendOnV(0x20)
+			state.AppendOnV(0x00)
 
 			sut.Handle(state)
 
@@ -77,7 +79,8 @@ func TestUpdateVRAMDataIOEventStrategy_Handle_IncrementsVBy32_WhenIncrementBitSe
 
 			sut := strategies.NewUpdateVRAMDataIOEventStrategy(bus)
 			state := domain.NewPPU()
-			state.SetV(0x2000)
+			state.AppendOnV(0x20)
+			state.AppendOnV(0x00)
 
 			sut.Handle(state)
 

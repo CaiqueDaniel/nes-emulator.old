@@ -5,6 +5,7 @@ import (
 	shared "nes-emu/src/emulator/shared/application"
 )
 
+// Simulate write to $2006 latch
 type UpdateVRAMAddressIOEventStrategy struct {
 	initilized bool
 	bus        shared.MNIBus
@@ -19,18 +20,7 @@ func NewUpdateVRAMAddressIOEventStrategy(bus shared.MNIBus) *UpdateVRAMAddressIO
 
 func (s *UpdateVRAMAddressIOEventStrategy) Handle(state *domain.PPU) {
 	s.checkIfInitilized()
-
-	const high_byte_mask = 0x3F00
-
-	if !state.IsWSet() {
-		value := s.bus.ReadFromMemory(domain.PPU_ADDRESS)
-		state.SetT((uint16(value) << 8) & high_byte_mask)
-	} else {
-		state.SetT(state.GetT() | uint16(s.bus.ReadFromMemory(domain.PPU_ADDRESS)))
-		state.CopyTToV()
-	}
-
-	state.ToggleW()
+	state.AppendOnV(s.bus.ReadFromMemory(domain.PPU_ADDRESS))
 }
 
 func (s *UpdateVRAMAddressIOEventStrategy) checkIfInitilized() {

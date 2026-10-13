@@ -5,6 +5,7 @@ import (
 	shared "nes-emu/src/emulator/shared/application"
 )
 
+// Simulate read to $2002 latch
 type ResetWAndVBlankFlagIOEventStrategy struct {
 	initialized bool
 	bus         shared.MNIBus

@@ -69,15 +69,11 @@ func (p *PPU) AdvanceToNextScanline() {
 }
 
 func (p *PPU) IncreaseVByOffset(offset uint16) {
-	p.SetV(p.v + offset)
+	p.setV(p.v + offset)
 }
 
 func (p *PPU) IncreaseDots() {
 	p.dots = (p.dots + 1) % MAX_DOTS_PER_LINE
-}
-
-func (p *PPU) CopyTToV() {
-	p.v = p.t
 }
 
 func (p *PPU) SelectColorByPalleteIndex(index byte) uint32 {
@@ -113,8 +109,17 @@ func (p *PPU) GetFineY() uint16 {
 	return (p.v & fine_y_mask) >> 12
 }
 
-func (p *PPU) SetV(value uint16) {
-	p.v = value % MAX_VALUE_FOR_15_BITS
+func (p *PPU) AppendOnV(value byte) {
+	const high_byte_mask = 0x3F00
+
+	if !p.IsWSet() {
+		p.SetT((uint16(value) << 8) & high_byte_mask)
+	} else {
+		p.SetT(p.GetT() | uint16(value))
+		p.copyTToV()
+	}
+
+	p.ToggleW()
 }
 
 func (p *PPU) GetV() uint16 {
@@ -151,4 +156,12 @@ func (p *PPU) IsWSet() bool {
 
 func (p *PPU) IsRenderingEnabled() bool {
 	return p.enableRender
+}
+
+func (p *PPU) setV(value uint16) {
+	p.v = value % MAX_VALUE_FOR_15_BITS
+}
+
+func (p *PPU) copyTToV() {
+	p.setV(p.t)
 }

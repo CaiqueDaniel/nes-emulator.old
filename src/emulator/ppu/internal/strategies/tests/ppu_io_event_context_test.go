@@ -48,7 +48,8 @@ func TestPPUIOEventContext_HandleEvent_Write_PPUData(t *testing.T) {
 
 	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
-	state.SetV(0x2000)
+	state.AppendOnV(0x20)
+	state.AppendOnV(0x00)
 
 	event := &application.IOEvent{
 		Address: domain.PPU_DATA,

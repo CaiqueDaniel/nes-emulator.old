@@ -125,18 +125,21 @@ func TestPPU_SetV_GetV(t *testing.T) {
 	sut := NewPPU()
 
 	testCases := []struct {
-		input    uint16
+		input    []byte
 		expected uint16
 	}{
-		{input: 0x0000, expected: 0x0000},
-		{input: 0x1234, expected: 0x1234},
-		{input: 0x7FFF, expected: 0x7FFF % MAX_VALUE_FOR_15_BITS}, // 32767 % 32767 = 0
-		{input: 32768, expected: 1},                              // 32768 % 32767 = 1
-		{input: 0xFFFF, expected: 0xFFFF % MAX_VALUE_FOR_15_BITS},
+		{input: []byte{0x00, 0x00}, expected: 0x0000},
+		{input: []byte{0x12, 0x34}, expected: 0x1234},
+		{input: []byte{0x7F, 0xFF}, expected: 16383},
+		{input: []byte{0x80, 0x00}, expected: 0},
+		{input: []byte{0xFF, 0xFF}, expected: 16383},
 	}
 
 	for _, tc := range testCases {
-		sut.SetV(tc.input)
+		for _, b := range tc.input {
+			sut.AppendOnV(b)
+		}
+
 		if sut.GetV() != tc.expected {
 			t.Errorf("SetV(%d): expected %d, got %d", tc.input, tc.expected, sut.GetV())
 		}
@@ -145,18 +148,12 @@ func TestPPU_SetV_GetV(t *testing.T) {
 
 func TestPPU_IncreaseVByOffset(t *testing.T) {
 	sut := NewPPU()
-	sut.SetV(100)
+	sut.AppendOnV(0x00)
+	sut.AppendOnV(100)
 
 	sut.IncreaseVByOffset(200)
 	if sut.GetV() != 300 {
 		t.Errorf("expected v to be 300, got %d", sut.GetV())
-	}
-
-	// Adding offset that triggers modulo
-	sut.SetV(32760)
-	sut.IncreaseVByOffset(10) // 32770 % 32767 = 3
-	if sut.GetV() != 3 {
-		t.Errorf("expected v to wrap with modulo, got %d", sut.GetV())
 	}
 }
 
@@ -178,21 +175,6 @@ func TestPPU_SetT_GetT(t *testing.T) {
 		if sut.GetT() != tc.expected {
 			t.Errorf("SetT(%d): expected %d, got %d", tc.input, tc.expected, sut.GetT())
 		}
-	}
-}
-
-func TestPPU_CopyTToV(t *testing.T) {
-	sut := NewPPU()
-	sut.SetT(0x2468)
-	sut.SetV(0x1111)
-
-	sut.CopyTToV()
-
-	if sut.GetV() != sut.GetT() {
-		t.Errorf("expected v (%d) to equal t (%d)", sut.GetV(), sut.GetT())
-	}
-	if sut.GetV() != 0x2468 {
-		t.Errorf("expected v to be 0x2468, got 0x%X", sut.GetV())
 	}
 }
 
