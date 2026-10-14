@@ -40,18 +40,20 @@ var ColorPallet = [64]uint32{
 }
 
 type PPU struct {
-	scanline     uint16
-	pixel        uint8
-	enableRender bool
-	v, t         uint16
-	x            uint8
-	w            bool
-	dots         uint16
+	scanline      uint16
+	pixel         uint8
+	enableBg      bool
+	enableSprites bool
+	v, t          uint16
+	x             uint8
+	w             bool
+	dots          uint16
 }
 
 func NewPPU() *PPU {
 	p := &PPU{
-		enableRender: false,
+		enableBg:      false,
+		enableSprites: false,
 	}
 
 	return p
@@ -154,8 +156,24 @@ func (p *PPU) IsWSet() bool {
 	return p.w
 }
 
+func (p *PPU) RefreshRenderingStateFromLatch(value byte) {
+	const enable_bg_mask = 0b0000_1000
+	const enable_sprites_mask = 0b0001_0000
+
+	p.enableBg = (value & enable_bg_mask) != 0
+	p.enableSprites = (value & enable_sprites_mask) != 0
+}
+
+func (p *PPU) IsBackgroundRenderingEnabled() bool {
+	return p.enableBg
+}
+
+func (p *PPU) IsSpriteRenderingEnabled() bool {
+	return p.enableSprites
+}
+
 func (p *PPU) IsRenderingEnabled() bool {
-	return p.enableRender
+	return p.enableBg || p.enableSprites
 }
 
 func (p *PPU) setV(value uint16) {

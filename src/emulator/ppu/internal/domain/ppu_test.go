@@ -453,3 +453,59 @@ func TestPPU_IsOnPreRender(t *testing.T) {
 		})
 	}
 }
+
+func TestPPU_TogglePPURendering(t *testing.T) {
+	testCases := []struct {
+		name           string
+		value          uint8
+		expected       bool
+		bgExpected     bool
+		spriteExpected bool
+	}{
+		{
+			name:           "disable rendering",
+			value:          0b0000_0000,
+			expected:       false,
+			bgExpected:     false,
+			spriteExpected: false,
+		},
+		{
+			name:           "enable rendering",
+			value:          0b0001_1000,
+			expected:       true,
+			bgExpected:     true,
+			spriteExpected: true,
+		},
+		{
+			name:           "enable bg rendering; disable sprite rendering",
+			value:          0b0000_1000,
+			expected:       true,
+			bgExpected:     true,
+			spriteExpected: false,
+		},
+		{
+			name:           "disable bg rendering; enable sprite rendering",
+			value:          0b0001_0000,
+			expected:       true,
+			bgExpected:     false,
+			spriteExpected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			sut := NewPPU()
+			sut.RefreshRenderingStateFromLatch(tc.value)
+
+			if sut.IsRenderingEnabled() != tc.expected {
+				t.Errorf("IsRenderingEnabled() with value=%08b: expected %v, got %v", tc.value, tc.expected, sut.IsRenderingEnabled())
+			}
+			if sut.IsBackgroundRenderingEnabled() != tc.bgExpected {
+				t.Errorf("IsBackgroundRenderingEnabled() with value=%08b: expected %v, got %v", tc.value, tc.bgExpected, sut.IsBackgroundRenderingEnabled())
+			}
+			if sut.IsSpriteRenderingEnabled() != tc.spriteExpected {
+				t.Errorf("IsSpriteRenderingEnabled() with value=%08b: expected %v, got %v", tc.value, tc.spriteExpected, sut.IsSpriteRenderingEnabled())
+			}
+		})
+	}
+}
