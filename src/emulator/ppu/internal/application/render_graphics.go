@@ -6,13 +6,12 @@ import (
 )
 
 type RenderGraphics struct {
-	initialized     bool
-	bus             shared.MNIBus
-	pipeline        PixelPipeline
-	screen          Screen
-	ioEventsContext IOEventsContext
-	repository      domain.PPURepository
-	buffer          [domain.MAX_FRAME_SCANLINE + 1][domain.MAX_PIXEL_PER_SCANLINE + 1]uint32
+	initialized bool
+	bus         shared.MNIBus
+	pipeline    PixelPipeline
+	screen      Screen
+	repository  domain.PPURepository
+	buffer      [domain.MAX_FRAME_SCANLINE + 1][domain.MAX_PIXEL_PER_SCANLINE + 1]uint32
 }
 
 type RenderGraphicsInput struct {
@@ -20,15 +19,14 @@ type RenderGraphicsInput struct {
 	IsWrite bool
 }
 
-func NewRenderGraphics(bus shared.MNIBus, pipeline PixelPipeline, screen Screen, ioEventsContext IOEventsContext, repository domain.PPURepository) *RenderGraphics {
+func NewRenderGraphics(bus shared.MNIBus, pipeline PixelPipeline, screen Screen, repository domain.PPURepository) *RenderGraphics {
 	p := &RenderGraphics{
-		initialized:     true,
-		pipeline:        pipeline,
-		bus:             bus,
-		screen:          screen,
-		ioEventsContext: ioEventsContext,
-		buffer:          [domain.MAX_FRAME_SCANLINE + 1][domain.MAX_PIXEL_PER_SCANLINE + 1]uint32{},
-		repository:      repository,
+		initialized: true,
+		pipeline:    pipeline,
+		bus:         bus,
+		screen:      screen,
+		buffer:      [domain.MAX_FRAME_SCANLINE + 1][domain.MAX_PIXEL_PER_SCANLINE + 1]uint32{},
+		repository:  repository,
 	}
 
 	return p
@@ -38,10 +36,6 @@ func (p *RenderGraphics) Execute(input *RenderGraphicsInput) {
 	p.checkIfInitilized()
 
 	state := p.repository.GetState()
-
-	if input != nil {
-		p.ioEventsContext.HandleEvent(&IOEvent{Address: input.Address, IsWrite: input.IsWrite}, &state)
-	}
 
 	if state.ShouldRenderScanlinePixel() {
 		p.renderPixel(&state)
