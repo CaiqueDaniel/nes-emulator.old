@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"log"
 	"nes-emu/src/emulator"
@@ -9,12 +8,11 @@ import (
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/paint"
 )
 
 func main() {
 	driver.Main(func(s screen.Screen) {
-		width, height := 640, 480
+		width, height := 260, 240
 		size := image.Point{X: width, Y: height}
 
 		// 1. Cria a janela
@@ -41,11 +39,11 @@ func main() {
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
-					fmt.Println("Recovered in goroutine:", r)
+					panic(r)
 				}
 			}()
 
-			err := emulator.GetStartGameController().StartGame("./test/resources/color_test.nes")
+			err := emulator.GetStartGameController().StartGame("./test/resources/no-title")
 
 			if err != nil {
 				panic(err)
@@ -63,11 +61,6 @@ func main() {
 				if e.To == lifecycle.StageDead {
 					return
 				}
-
-			case paint.Event:
-				// Transfere o buffer para a janela e exibe na tela
-				w.Upload(image.Point{0, 0}, buf, buf.Bounds())
-				w.Publish()
 			}
 		}
 	})

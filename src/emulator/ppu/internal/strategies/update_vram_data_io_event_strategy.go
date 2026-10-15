@@ -5,6 +5,7 @@ import (
 	shared "nes-emu/src/emulator/shared/application"
 )
 
+// Simulate write to $2007 latch
 type UpdateVRAMDataIOEventStrategy struct {
 	initialized bool
 	bus         shared.MNIBus

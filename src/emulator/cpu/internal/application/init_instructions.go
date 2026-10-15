@@ -227,32 +227,32 @@ func (c *CPU) appendSTYInstructions(instructionSet *instructionSet) {
 func (c *CPU) appendTransferInstructions(instructionSet *instructionSet) {
 	instructionSet[0xAA] = &instruction{
 		Method:    func(u []uint8) { c.TransferFromAccumulatorToRegister(REGISTER_X) },
-		ArgsBytes: 1,
+		ArgsBytes: 0,
 	}
 
 	instructionSet[0xA8] = &instruction{
 		Method:    func(u []uint8) { c.TransferFromAccumulatorToRegister(REGISTER_Y) },
-		ArgsBytes: 1,
+		ArgsBytes: 0,
 	}
 
 	instructionSet[0xBA] = &instruction{
 		Method:    func(u []uint8) { c.TransferStackToX() },
-		ArgsBytes: 1,
+		ArgsBytes: 0,
 	}
 
 	instructionSet[0x8A] = &instruction{
 		Method:    func(u []uint8) { c.TransferFromRegisterToAccumulator(REGISTER_X) },
-		ArgsBytes: 1,
+		ArgsBytes: 0,
 	}
 
 	instructionSet[0x98] = &instruction{
 		Method:    func(u []uint8) { c.TransferFromRegisterToAccumulator(REGISTER_Y) },
-		ArgsBytes: 1,
+		ArgsBytes: 0,
 	}
 
 	instructionSet[0x9A] = &instruction{
 		Method:    func(u []uint8) { c.TransferXToStack() },
-		ArgsBytes: 1,
+		ArgsBytes: 0,
 	}
 }
 

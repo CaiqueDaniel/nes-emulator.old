@@ -13,7 +13,7 @@ func NewMemoryScreen() *MemoryScreen {
 }
 
 func (s *MemoryScreen) ShowImage(buffer *[domain.MAX_FRAME_SCANLINE + 1][domain.MAX_PIXEL_PER_SCANLINE + 1]uint32) {
-	(*s.buffer) = *buffer
+	s.buffer = buffer
 }
 
 func (s *MemoryScreen) GetImageBuffer() *[domain.MAX_FRAME_SCANLINE + 1][domain.MAX_PIXEL_PER_SCANLINE + 1]uint32 {

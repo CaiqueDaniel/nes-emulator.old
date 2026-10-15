@@ -3,7 +3,6 @@ package tests
 import (
 	ppu "nes-emu/src/emulator/ppu/internal/application"
 	"nes-emu/src/emulator/ppu/internal/persistence"
-	"nes-emu/src/emulator/ppu/internal/strategies"
 	memory "nes-emu/src/emulator/shared/persistance"
 	bus "nes-emu/src/emulator/shared/services"
 	"nes-emu/test/fixtures"
@@ -18,7 +17,7 @@ func TestNewRenderGraphics(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	if ppu == nil {
 		t.Fatal("expected NewRenderGraphics to return a non-nil instance")
@@ -56,7 +55,7 @@ func TestPPURender_ShouldDrawAPixel(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	ppu.Execute(nil)
 
@@ -77,7 +76,7 @@ func TestPPURender_ShouldWrapScanlineToStart(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	for i := 0; i < 336*262; i++ {
 		ppu.Execute(nil)
@@ -104,7 +103,7 @@ func TestPPURender_ShouldNotTriggerAnNMIOnVBlank_WhenNMIFlagDisabled(t *testing.
 
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	for i := 0; i < 336*240; i++ {
 		ppu.Execute(nil)
@@ -135,7 +134,7 @@ func TestPPURender_ShouldTriggerAnNMIOnVBlank_WhenNMIFlagEnabled(t *testing.T) {
 
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	mem.Write(0x2000, 0b10000000)
 
@@ -168,7 +167,7 @@ func TestPPURender_ShouldResetFlagsOnStatusRegister_OnPreRender(t *testing.T) {
 
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	for i := 0; i < 336*261; i++ {
 		ppu.Execute(nil)
@@ -199,7 +198,7 @@ func TestPPURender_ShouldResetFlagsOnStatusRegister_WithoutChangingOtherBits_OnP
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	mem.Write(0x2002, 0b1111_1111)
 
@@ -232,7 +231,7 @@ func TestPPURender_ShouldSetVBlankFlagOnStatusRegister_OnVBlank(t *testing.T) {
 
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	for i := 0; i < 336*240; i++ {
 		ppu.Execute(nil)
@@ -259,7 +258,7 @@ func TestPPURender_ShouldShiftRegisters_OnVisibleScanlines(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	sut := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	sut := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	for i := 0; i <= 16; i++ {
 		sut.Execute(nil)
@@ -292,7 +291,7 @@ func TestPPURender_ShouldShiftRegisters_OnHBlank(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	sut := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	sut := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	for i := 0; i <= 256; i++ {
 		sut.Execute(nil)
@@ -344,7 +343,7 @@ func TestPPURender_ShouldShiftRegisters_OnVBlank(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screen := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	sut := ppu.NewRenderGraphics(bus, mockPipeline, screen, strategies.NewPPUIOEventContext(bus), repository)
+	sut := ppu.NewRenderGraphics(bus, mockPipeline, screen, repository)
 
 	for i := 0; i <= 336*240; i++ {
 		sut.Execute(nil)
@@ -396,7 +395,7 @@ func TestPPURender_ShouldShowImageOnScreen_OnVBlankStart(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	// Render until start of VBlank (scanline 240)
 	for i := 0; i < 336*240; i++ {
@@ -426,7 +425,7 @@ func TestPPURender_ShouldNotRenderPixel_DuringHBlank(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	// Execute through the visible portion of scanline 0 (dots 0 to 255: 256 cycles)
 	for i := 0; i < 256; i++ {
@@ -452,7 +451,7 @@ func TestPPURender_ShouldNotRenderPixel_DuringVBlank(t *testing.T) {
 	mockPipeline := &PixelPipelineFixture{}
 	screenFixture := NewScreenFixture()
 	repository := persistence.NewPPUMemoryRepository()
-	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, strategies.NewPPUIOEventContext(bus), repository)
+	ppu := ppu.NewRenderGraphics(bus, mockPipeline, screenFixture, repository)
 
 	// Execute until VBlank begins (scanline 240, dot 0)
 	for i := 0; i < 336*240; i++ {

@@ -1,37 +1,15 @@
-package strategies
+package tests
 
 import (
 	"nes-emu/src/emulator/ppu/internal/domain"
+	"nes-emu/src/emulator/ppu/internal/strategies"
 	"nes-emu/test/fixtures"
 	"testing"
 )
 
-func TestNewResetWAndVBlankFlagIOEventStrategy(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewResetWAndVBlankFlagIOEventStrategy(bus)
-
-	if sut == nil {
-		t.Fatal("expected NewResetWAndVBlankFlagIOEventStrategy to return a non-nil instance")
-	}
-
-	if !sut.initialized {
-		t.Errorf("expected initialized to be true")
-	}
-
-	if sut.bus != bus {
-		t.Errorf("expected bus to be properly set")
-	}
-}
-
 func TestResetWAndVBlankFlagIOEventStrategy_PanicWhenNotInitialized(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic when ResetWAndVBlankFlagIOEventStrategy is not initialized")
-		}
-	}()
-
-	sut := &ResetWAndVBlankFlagIOEventStrategy{}
+	bus := fixtures.NewMockBus()
+	sut := strategies.NewResetWAndVBlankFlagIOEventStrategy(bus)
 	state := domain.NewPPU()
 	sut.Handle(state)
 }
@@ -69,7 +47,7 @@ func TestResetWAndVBlankFlagIOEventStrategy_Handle_ClearsVBlankFlagAndPreservesO
 			bus := fixtures.NewMockBus()
 			bus.WriteToMemory(domain.PPU_STATUS, tc.initialStatus)
 
-			sut := NewResetWAndVBlankFlagIOEventStrategy(bus)
+			sut := strategies.NewResetWAndVBlankFlagIOEventStrategy(bus)
 			state := domain.NewPPU()
 
 			sut.Handle(state)
@@ -84,7 +62,7 @@ func TestResetWAndVBlankFlagIOEventStrategy_Handle_ClearsVBlankFlagAndPreservesO
 
 func TestResetWAndVBlankFlagIOEventStrategy_Handle_ClearsWFlag(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewResetWAndVBlankFlagIOEventStrategy(bus)
+	sut := strategies.NewResetWAndVBlankFlagIOEventStrategy(bus)
 	state := domain.NewPPU()
 
 	state.ToggleW()

@@ -1,6 +1,9 @@
 package delivery
 
-import "nes-emu/src/emulator/cpu/internal/application"
+import (
+	"fmt"
+	"nes-emu/src/emulator/cpu/internal/application"
+)
 
 type CPUController struct {
 	initialize bool
@@ -27,6 +30,27 @@ func (c *CPUController) Reset() {
 func (c *CPUController) SetNMI() {
 	c.checkIfInitialized()
 	c.cpu.SetNMI()
+}
+
+func (c *CPUController) InitProgramCounter() {
+	c.checkIfInitialized()
+	c.cpu.InitProgramCounter()
+}
+
+func (c *CPUController) StepIntoNextInstruction() {
+	c.checkIfInitialized()
+	c.cpu.RunInstruction()
+}
+
+func (c *CPUController) GetProgramCounter() uint16 {
+	c.checkIfInitialized()
+	a := c.cpu.GetProgramCounter()
+
+	if a >= 0x8100 {
+		fmt.Print()
+	}
+
+	return a
 }
 
 func (c *CPUController) checkIfInitialized() {

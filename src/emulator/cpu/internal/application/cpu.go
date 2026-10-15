@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fmt"
 	"nes-emu/src/emulator/shared/application"
 	"slices"
 	"time"
@@ -69,7 +70,7 @@ func NewCpuWithInternal(bus application.Bus) *CPU {
 }
 
 func (c *CPU) RunProgram() {
-	c.initProgramCounter()
+	c.InitProgramCounter()
 	c.runGameLoop()
 }
 
@@ -141,7 +142,7 @@ func (c *CPU) PushFlagsIntoStack() {
 	c.PushValueToStack(valueToPush)
 }
 
-func (c *CPU) initProgramCounter() {
+func (c *CPU) InitProgramCounter() {
 	startAddressLow := c.readFromMemory(START_POINTER)
 	startAddressHigh := c.readFromMemory(START_POINTER + 1)
 	startAddress := (uint16(startAddressHigh) << 8) + uint16(startAddressLow)
@@ -174,20 +175,28 @@ func (c *CPU) renderFrame() {
 	const cycles_per_frame = 29781
 
 	for c.currentFrameCycles < cycles_per_frame {
-		if c.nmi {
-			c.HandleNMI()
-		}
-
-		opCode := c.readFromMemory(c.programCounter)
-		c.programCounter++
-
-		c.interpretInstruction(opCode)
+		c.RunInstruction()
 
 		if c.stopPcAt != -1 && c.programCounter >= uint16(c.stopPcAt) {
 			c.stopProgram = true
 			break
 		}
 	}
+}
+
+func (c *CPU) RunInstruction() {
+	if c.nmi {
+		c.HandleNMI()
+	}
+
+	if c.programCounter == 0x8100 {
+		fmt.Print()
+	}
+
+	opCode := c.readFromMemory(c.programCounter)
+	c.programCounter++
+
+	c.interpretInstruction(opCode)
 }
 
 func (c *CPU) interpretInstruction(opCode uint8) {
@@ -215,12 +224,14 @@ func (c *CPU) interpretInstruction(opCode uint8) {
 func (c *CPU) writeToMemory(address uint16, value uint8) {
 	c.bus.Tick()
 	c.bus.WriteToMemory(address, value)
+	c.bus.TriggerIOEvents(address, true)
 	c.currentFrameCycles++
 }
 
 func (c *CPU) readFromMemory(address uint16) uint8 {
 	c.bus.Tick()
 	value := c.bus.ReadFromMemory(address)
+	c.bus.TriggerIOEvents(address, false)
 	c.currentFrameCycles++
 	return value
 }

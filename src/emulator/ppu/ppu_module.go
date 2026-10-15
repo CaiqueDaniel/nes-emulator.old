@@ -22,7 +22,7 @@ func NewPPUModule(bus shared_application.MNIBus, window *screen.Window, buffer *
 	screen := services.NewShinyScreen(window, buffer)
 	repository := persistence.NewPPUMemoryRepository()
 	ioEventsContext := strategies.NewPPUIOEventContext(bus)
-	renderGraphics := application.NewRenderGraphics(bus, pipeline, screen, ioEventsContext, repository)
+	renderGraphics := application.NewRenderGraphics(bus, pipeline, screen, repository)
 	updateStateFromIOEvents := application.NewUpdateStateFromIOEvents(repository, ioEventsContext)
 
 	controller := delivery.NewPPUController(renderGraphics, updateStateFromIOEvents)
@@ -38,7 +38,7 @@ func NewPPUModuleWithExternalScreenForTests(bus shared_application.MNIBus) (*PPU
 	memoryScreen := mock_services.NewMemoryScreen()
 	repository := persistence.NewPPUMemoryRepository()
 	ioEventsContext := strategies.NewPPUIOEventContext(bus)
-	renderGraphics := application.NewRenderGraphics(bus, pipeline, memoryScreen, ioEventsContext, repository)
+	renderGraphics := application.NewRenderGraphics(bus, pipeline, memoryScreen, repository)
 	updateStateFromIOEvents := application.NewUpdateStateFromIOEvents(repository, ioEventsContext)
 
 	controller := delivery.NewPPUController(renderGraphics, updateStateFromIOEvents)

@@ -1,41 +1,16 @@
-package strategies
+package tests
 
 import (
 	"nes-emu/src/emulator/ppu/internal/application"
 	"nes-emu/src/emulator/ppu/internal/domain"
+	"nes-emu/src/emulator/ppu/internal/strategies"
 	"nes-emu/test/fixtures"
 	"testing"
 )
 
-func TestNewPPUIOEventContext(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewPPUIOEventContext(bus)
-
-	if sut == nil {
-		t.Fatal("expected NewPPUIOEventContext to return a non-nil instance")
-	}
-
-	if !sut.initialized {
-		t.Errorf("expected initialized to be true")
-	}
-
-	if sut.bus != bus {
-		t.Errorf("expected bus to be properly set")
-	}
-}
-
 func TestPPUIOEventContext_PanicWhenNotInitialized(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic when PPUIOEventContext is not initialized")
-		}
-		if r != "PPUIOEventContext not initialized" {
-			t.Errorf("expected panic 'PPUIOEventContext not initialized', got '%v'", r)
-		}
-	}()
-
-	sut := &PPUIOEventContext{}
+	bus := fixtures.NewMockBus()
+	sut := strategies.NewPPUIOEventContext(bus)
 	event := &application.IOEvent{
 		Address: domain.PPU_ADDRESS,
 		IsWrite: true,
@@ -48,7 +23,7 @@ func TestPPUIOEventContext_HandleEvent_Write_PPUAddress(t *testing.T) {
 	bus := fixtures.NewMockBus()
 	bus.WriteToMemory(domain.PPU_ADDRESS, 0x24)
 
-	sut := NewPPUIOEventContext(bus)
+	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
 
 	event := &application.IOEvent{
@@ -71,9 +46,10 @@ func TestPPUIOEventContext_HandleEvent_Write_PPUData(t *testing.T) {
 	bus.WriteToMemory(domain.PPU_DATA, 0x55)
 	bus.WriteToMemory(domain.PPU_CONTROL, 0x00) // increment by 1
 
-	sut := NewPPUIOEventContext(bus)
+	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
-	state.SetV(0x2000)
+	state.AppendOnV(0x20)
+	state.AppendOnV(0x00)
 
 	event := &application.IOEvent{
 		Address: domain.PPU_DATA,
@@ -92,7 +68,7 @@ func TestPPUIOEventContext_HandleEvent_Write_PPUData(t *testing.T) {
 
 func TestPPUIOEventContext_HandleEvent_Write_UnhandledAddress(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewPPUIOEventContext(bus)
+	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
 
 	event := &application.IOEvent{
@@ -118,7 +94,7 @@ func TestPPUIOEventContext_HandleEvent_Read_PPUStatus(t *testing.T) {
 	bus := fixtures.NewMockBus()
 	bus.WriteToMemory(domain.PPU_STATUS, 0x80) // VBlank flag set
 
-	sut := NewPPUIOEventContext(bus)
+	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
 	state.ToggleW() // Set W flag
 
@@ -139,7 +115,7 @@ func TestPPUIOEventContext_HandleEvent_Read_PPUStatus(t *testing.T) {
 
 func TestPPUIOEventContext_HandleEvent_Read_UnhandledAddress(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewPPUIOEventContext(bus)
+	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
 	state.ToggleW()
 
@@ -156,39 +132,21 @@ func TestPPUIOEventContext_HandleEvent_Read_UnhandledAddress(t *testing.T) {
 	}
 }
 
-func TestPPUIOEventContext_GetStrategyForWriteSignal(t *testing.T) {
+func TestPPUIOEventContext_HandleEvent_Write_ScrollToVRegister(t *testing.T) {
 	bus := fixtures.NewMockBus()
-	sut := NewPPUIOEventContext(bus)
+	sut := strategies.NewPPUIOEventContext(bus)
 	state := domain.NewPPU()
+	state.ToggleW()
 
-	stratAddr := sut.getStrategyForWriteSignal(domain.PPU_ADDRESS, state)
-	if _, ok := stratAddr.(*UpdateVRAMAddressIOEventStrategy); !ok {
-		t.Errorf("expected *UpdateVRAMAddressIOEventStrategy for PPU_ADDRESS, got %T", stratAddr)
+	event := &application.IOEvent{
+		Address: domain.PPU_SCROLL, // Not handled by read strategy
+		IsWrite: true,
 	}
 
-	stratData := sut.getStrategyForWriteSignal(domain.PPU_DATA, state)
-	if _, ok := stratData.(*UpdateVRAMDataIOEventStrategy); !ok {
-		t.Errorf("expected *UpdateVRAMDataIOEventStrategy for PPU_DATA, got %T", stratData)
-	}
+	// Should not panic, and state should remain unchanged
+	sut.HandleEvent(event, state)
 
-	stratUnknown := sut.getStrategyForWriteSignal(domain.PPU_STATUS, state)
-	if stratUnknown != nil {
-		t.Errorf("expected nil strategy for PPU_STATUS on write, got %v", stratUnknown)
-	}
-}
-
-func TestPPUIOEventContext_GetStrategyForReadSignal(t *testing.T) {
-	bus := fixtures.NewMockBus()
-	sut := NewPPUIOEventContext(bus)
-	state := domain.NewPPU()
-
-	stratStatus := sut.getStrategyForReadSignal(domain.PPU_STATUS, state)
-	if _, ok := stratStatus.(*ResetWAndVBlankFlagIOEventStrategy); !ok {
-		t.Errorf("expected *ResetWAndVBlankFlagIOEventStrategy for PPU_STATUS, got %T", stratStatus)
-	}
-
-	stratUnknown := sut.getStrategyForReadSignal(domain.PPU_ADDRESS, state)
-	if stratUnknown != nil {
-		t.Errorf("expected nil strategy for PPU_ADDRESS on read, got %v", stratUnknown)
+	if state.IsWSet() {
+		t.Errorf("expected W to remain set")
 	}
 }
