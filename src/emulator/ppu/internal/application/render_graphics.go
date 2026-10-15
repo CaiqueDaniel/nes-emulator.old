@@ -90,7 +90,7 @@ func (p *RenderGraphics) updateStatusRegister(state *domain.PPU) {
 	}
 
 	if state.IsVBlankStarted() {
-		value := p.bus.ReadFromMemory(domain.PPU_STATUS) ^ 0b10000000
+		value := p.bus.ReadFromMemory(domain.PPU_STATUS) | 0b10000000
 		p.bus.WriteToMemory(domain.PPU_STATUS, value)
 	}
 }
