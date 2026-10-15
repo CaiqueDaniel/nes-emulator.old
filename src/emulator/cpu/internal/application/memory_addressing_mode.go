@@ -43,20 +43,19 @@ func (c *CPU) GetValueByIndirectIndexedYMode(initialAddress uint8) uint8 {
 }
 
 func (c *CPU) GetAddressByIndexedAbsoluteMode(address uint16, index uint8) uint16 {
-	prevHighAddress := uint8(address >> 8)
 	newAddress := address + uint16(index)
-	currentHighAddress := uint8(newAddress >> 8)
 
-	if prevHighAddress != currentHighAddress {
-		c.doDummyMemoryRead(address)
+	if address&0xFF00 != newAddress&0xFF00 {
+		c.doDummyMemoryRead(getProvisionalIndexedAddress(address, newAddress))
 	}
 
 	return newAddress
 }
 
 func (c *CPU) GetAddressByIndexedAbsoluteModeWithDummyRead(address uint16, index uint8) uint16 {
-	c.doDummyMemoryRead(address)
-	return c.GetAddressByIndexedAbsoluteMode(address, index)
+	newAddress := address + uint16(index)
+	c.doDummyMemoryRead(getProvisionalIndexedAddress(address, newAddress))
+	return newAddress
 }
 
 func (c *CPU) GetAddressByIndexedIndirectXModeWithDummyRead(initialAddress uint16) uint16 {
@@ -76,21 +75,26 @@ func (c *CPU) GetAddressByIndirectIndexedYMode(initialAddress uint8) uint16 {
 	lowByte := c.readFromMemory(uint16(initialAddress))
 	highByte := c.readFromMemory(uint16(initialAddress + 1))
 	baseAddress := uint16(highByte)<<8 | uint16(lowByte)
-	newAddresss := baseAddress + uint16(c.y)
+	newAddress := baseAddress + uint16(c.y)
 
-	if uint8(newAddresss>>8) != highByte {
-		c.doDummyMemoryRead(baseAddress)
+	if baseAddress&0xFF00 != newAddress&0xFF00 {
+		c.doDummyMemoryRead(getProvisionalIndexedAddress(baseAddress, newAddress))
 	}
 
-	return newAddresss
+	return newAddress
 }
 
 func (c *CPU) GetAddressByIndirectIndexedYModeWithDummyRead(initialAddress uint8) uint16 {
 	lastByte := c.readFromMemory(uint16(initialAddress))
 	firstByte := c.readFromMemory(uint16(initialAddress + 1))
 	incompleteAddress := uint16(firstByte)<<8 | uint16(lastByte)
+	newAddress := incompleteAddress + uint16(c.y)
 
-	c.doDummyMemoryRead(incompleteAddress)
+	c.doDummyMemoryRead(getProvisionalIndexedAddress(incompleteAddress, newAddress))
 
-	return incompleteAddress + uint16(c.y)
+	return newAddress
+}
+
+func getProvisionalIndexedAddress(baseAddress, effectiveAddress uint16) uint16 {
+	return (baseAddress & 0xFF00) | (effectiveAddress & 0x00FF)
 }

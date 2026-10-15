@@ -6,9 +6,9 @@ func (c *CPU) JumpProgramCounterToValue(value uint16) {
 
 func (c *CPU) JumpProgramCounterByIndirectValue(address uint16) {
 	highPtrAddress := address & 0xFF00
-	lowPtrAddress := address & 0x00FF
+	lowPtrAddress := byte(address&0x00FF) + 1
 	lowAddress := uint16(c.readFromMemory(address))
-	highAddress := uint16(c.readFromMemory(highPtrAddress | (lowPtrAddress + 1)))
+	highAddress := uint16(c.readFromMemory(highPtrAddress | uint16(lowPtrAddress)))
 	finalAddress := highAddress<<8 | lowAddress
 
 	c.JumpProgramCounterToValue(finalAddress)
